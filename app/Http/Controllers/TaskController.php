@@ -7,9 +7,18 @@ use Illuminate\Http\Request;
 class TaskController extends Controller
 {
    
-    public function index()
+    public function index(Request $request)
     {
-        return view('tasks.index');
+       $tasks = [];
+        $category = $request->query('category');
+
+        if ($category) {
+            $tasks = array_filter($tasks, function ($task) use ($category) {
+                return $task['category'] === $category;
+            });
+        }
+
+        return view('tasks.index', compact('tasks'));
     }
 
    
@@ -21,6 +30,15 @@ class TaskController extends Controller
     
     public function store(Request $request)
     {
+        $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category'    => 'required|in:Work,School,Personal',
+            'status'      => 'required|in:pending,done',
+            'due_date'    => 'nullable|date',
+        ]);
+
+        return redirect()->route('tasks.index')->with('success', 'Task validated! (saving comes Tuesday)');
         
     }
 
