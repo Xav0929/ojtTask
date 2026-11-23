@@ -12,7 +12,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{{ route('tasks.index') }}">Task Manager</a>
-            <div class="navbar-nav me-auto">
+          <div class="navbar-nav ms-auto gap-2">
                 <a class="nav-link" href="{{ route('tasks.index') }}">Tasks</a>
                 <a class="nav-link" href="{{ route('tasks.create') }}">New Task</a>
             </div>
