@@ -7,6 +7,15 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Frameworks and Template Used
+
+- **Backend framework:** [Laravel 13](https://laravel.com/)
+- **Template engine:** [Laravel Blade](https://laravel.com/docs/blade)
+- **Frontend framework/template:** [Bootstrap 5.3.3](https://getbootstrap.com/)
+- **Template source:** [Bootstrap 5.3.3 CDN](https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css)
+- **Frontend build tool:** [Vite](https://vitejs.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) and custom CSS
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
