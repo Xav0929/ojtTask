@@ -13,8 +13,6 @@
 - **Template engine:** [Laravel Blade](https://laravel.com/docs/blade)
 - **Frontend framework/template:** [Bootstrap 5.3.3](https://getbootstrap.com/)
 - **Template source:** [Bootstrap 5.3.3 CDN](https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css)
-- **Frontend build tool:** [Vite](https://vitejs.dev/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/) and custom CSS
 
 ## About Laravel
 
