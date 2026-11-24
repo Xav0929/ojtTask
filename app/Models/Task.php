@@ -10,7 +10,14 @@ class Task extends Model
     /** @use HasFactory<\Database\Factories\TaskFactory> */
     use HasFactory;
 
-    protected $fillable = ['category_id', 'title', 'description', 'status', 'due_date'];
+    protected $fillable = ['category_id', 'title', 'description', 'status', 'priority', 'due_date'];
+
+    public function isOverdue(): bool
+    {
+        return $this->status === 'pending'
+            && $this->due_date
+            && \Carbon\Carbon::parse($this->due_date)->endOfDay()->isPast();
+    }
 
     public function category()
     {

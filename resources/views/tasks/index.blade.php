@@ -67,6 +67,7 @@
         <button type="submit" class="btn btn-primary">Filter</button>
     </form>
 
+
     <!-- Task table -->
     <div class="card-box overflow-hidden">
         <table class="table">
@@ -90,6 +91,7 @@
                         </div>
                     </th>
                     <th>Category</th>
+                    <th>Priority</th>
                     <th>Status</th>
                     <th>Due date</th>
                     <th class="text-end">Actions</th>
@@ -107,14 +109,28 @@
                                     <input type="checkbox" class="form-check-input mt-1" onchange="this.form.submit()" @checked($task->status === 'done')>
                                 </form>
                                 <div>
-                                    <div class="fw-semibold {{ $task->status === 'done' ? 'text-decoration-line-through' : '' }}">{{ $task->title }}</div>
+                                    <div class="fw-semibold task-link {{ $task->status === 'done' ? 'text-decoration-line-through' : '' }}"
+                                         data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                         data-title="{{ $task->title }}"
+                                         data-description="{{ $task->description ?: 'No description' }}"
+                                         data-category="{{ $task->category->name }}"
+                                         data-priority="{{ ucfirst($task->priority) }}"
+                                         data-status="{{ ucfirst($task->status) }}"
+                                         data-due="{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : 'No due date' }}{{ $task->isOverdue() ? ' (Overdue)' : '' }}"
+                                         data-created="{{ $task->created_at->format('M d, Y') }}">{{ $task->title }}</div>
                             <small>{{ $task->description }}</small>
                                 </div>
                             </div>
                         </td>
                         <td><span class="tag tag-{{ strtolower($task->category->name) }}">{{ $task->category->name }}</span></td>
+                        <td><span class="prio prio-{{ $task->priority }}">{{ ucfirst($task->priority) }}</span></td>
                         <td>{{ ucfirst($task->status) }}</td>
-                        <td>{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : '-' }}</td>
+                        <td class="{{ $task->isOverdue() ? 'text-overdue' : '' }}">
+                            {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : '-' }}
+                            @if ($task->isOverdue())
+                                <span class="badge-overdue">Overdue</span>
+                            @endif
+                        </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-sm btn-secondary"
                                     data-bs-toggle="modal" data-bs-target="#editTaskModal"
@@ -123,6 +139,7 @@
                                     data-description="{{ $task->description }}"
                                     data-category="{{ $task->category_id }}"
                                     data-status="{{ $task->status }}"
+                                    data-priority="{{ $task->priority }}"
                                     data-due="{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : '' }}">Edit</button>
                             <button type="button" class="btn btn-sm btn-danger"
                                     data-bs-toggle="modal" data-bs-target="#deleteTaskModal"
@@ -133,7 +150,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4">No tasks found.</td>
+                        <td colspan="6" class="text-center py-4">No tasks found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -185,7 +202,16 @@
 
                         <div class="mb-3">
                             <label for="due_date" class="form-label">Due date</label>
-                            <input type="date" id="due_date" name="due_date" class="form-control">
+                            <input type="date" id="due_date" name="due_date" class="form-control" min="{{ date('Y-m-d') }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select id="priority" name="priority" class="form-select">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
                         </div>
                     </div>
 
@@ -208,6 +234,7 @@
                     document.getElementById('edit_description').value = @json(old('description'));
                     document.getElementById('edit_category').value    = @json(old('category_id'));
                     document.getElementById('edit_status').value      = @json(old('status'));
+                    document.getElementById('edit_priority').value    = @json(old('priority'));
                     document.getElementById('edit_due').value         = @json(old('due_date'));
                     new bootstrap.Modal(editModal).show();
                 @else
@@ -292,7 +319,18 @@
                             </div>
                             <div class="col-6">
                                 <label for="edit_due" class="form-label">Due date</label>
-                                <input type="date" id="edit_due" name="due_date" class="form-control">
+                                <input type="date" id="edit_due" name="due_date" class="form-control" min="{{ date('Y-m-d') }}">
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <label for="edit_priority" class="form-label">Priority</label>
+                                <select id="edit_priority" name="priority" class="form-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -320,7 +358,47 @@
             document.getElementById('edit_description').value = b.dataset.description;
             document.getElementById('edit_category').value    = b.dataset.category;
             document.getElementById('edit_status').value      = b.dataset.status;
+            document.getElementById('edit_priority').value    = b.dataset.priority;
             document.getElementById('edit_due').value         = b.dataset.due;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('edit_due').min = (b.dataset.due && b.dataset.due < today) ? b.dataset.due : today;
+        });
+    </script>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="detailsDescription" class="mb-4"></p>
+                    <div class="row g-3">
+                        <div class="col-6"><small class="d-block">Category</small><span id="detailsCategory"></span></div>
+                        <div class="col-6"><small class="d-block">Priority</small><span id="detailsPriority"></span></div>
+                        <div class="col-6"><small class="d-block">Status</small><span id="detailsStatus"></span></div>
+                        <div class="col-6"><small class="d-block">Due date</small><span id="detailsDue"></span></div>
+                        <div class="col-6"><small class="d-block">Created</small><span id="detailsCreated"></span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('detailsModal').addEventListener('show.bs.modal', function (e) {
+            const b = e.relatedTarget;
+            document.getElementById('detailsTitle').textContent       = b.dataset.title;
+            document.getElementById('detailsDescription').textContent = b.dataset.description;
+            document.getElementById('detailsCategory').textContent    = b.dataset.category;
+            document.getElementById('detailsPriority').textContent    = b.dataset.priority;
+            document.getElementById('detailsStatus').textContent      = b.dataset.status;
+            document.getElementById('detailsDue').textContent         = b.dataset.due;
+            document.getElementById('detailsCreated').textContent     = b.dataset.created;
         });
     </script>
 

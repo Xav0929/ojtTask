@@ -42,6 +42,7 @@ class TaskFactory extends Factory
                 'Remember to double check.',
             ]),
             'status'      => fake()->randomElement(['pending', 'done']),
+            'priority'    => fake()->randomElement(['low', 'medium', 'high']),
             'due_date'    => fake()->dateTimeBetween('now', '+1 month'),
         ];
     }

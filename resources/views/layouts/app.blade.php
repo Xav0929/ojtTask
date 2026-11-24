@@ -48,6 +48,14 @@
         .btn-danger { background: #A35A4F; border-color: #A35A4F; }
         .btn-sm { font-size: 12px; padding: 3px 10px; }
         .btn-danger:hover { background: #8A463C; border-color: #8A463C; }
+    .prio::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: currentColor; }
+        .prio-low    { color: #6B8F5A; }
+        .prio-medium { color: #C08A2E; }
+        .prio-high   { color: #A35A4F; font-weight: 600; }
+        .text-overdue { color: #A35A4F; font-weight: 600; }
+        .badge-overdue { background: #A35A4F; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 6px; }
+        .task-link { cursor: pointer; }
+        .task-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>

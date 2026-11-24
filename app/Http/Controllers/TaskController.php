@@ -22,7 +22,11 @@ class TaskController extends Controller
         $query->where('status', $request->status);
     }
 
-    $tasks      = $query->orderByRaw("status = 'done'")->orderBy('due_date')->paginate(6)->withQueryString();
+    $tasks      = $query->orderByRaw("status = 'done'")
+                        ->orderByRaw("FIELD(priority, 'high', 'medium', 'low')")
+                        ->orderBy('due_date')
+                        ->paginate(6)
+                        ->withQueryString();
     $categories = Category::all();
 
     $total   = Task::count();
@@ -37,7 +41,8 @@ class TaskController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'due_date'    => 'nullable|date',
+            'priority'    => 'required|in:low,medium,high',
+            'due_date'    => 'nullable|date|after_or_equal:today',
         ]);
 
         Task::create([
@@ -45,6 +50,7 @@ class TaskController extends Controller
             'description' => $request->description,
             'category_id' => $request->category_id,
             'status'      => 'pending',
+            'priority'    => $request->priority,
             'due_date'    => $request->due_date,
         ]);
 
@@ -86,10 +92,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'status'      => 'required|in:pending,done',
-            'due_date'    => 'nullable|date',
+            'priority'    => 'required|in:low,medium,high',
+            'due_date'    => 'nullable|date|after_or_equal:today',
         ]);
 
-        $task->update($request->only('title', 'description', 'category_id', 'status', 'due_date'));
+        $task->update($request->only('title', 'description', 'category_id', 'status', 'priority', 'due_date'));
 
         return redirect()->route('tasks.index')->with('success', 'Task updated!');
     }
