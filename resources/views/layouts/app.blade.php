@@ -32,6 +32,22 @@
         .table td { padding: 14px 16px; }
 
         .tag { background: var(--cream); padding: 3px 10px; border-radius: 6px; font-size: 13px; }
+        .tag-work     { background: #DCE8F2; color: #3E6A8A; }
+        .tag-school   { background: #F6E7C8; color: #8A6420; }
+        .tag-personal { background: #F2DAD4; color: #9A4F40; }
+    .form-check-input { border: 2px solid #8A9189; background-color: white; }
+        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); }
+    .form-check-input { border: 2px solid #8A9189; background-color: white; }
+        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); }
+    .tag-work     { background: #DCE8F2; color: #3E6A8A; }
+        .tag-school   { background: #F6E7C8; color: #8A6420; }
+        .tag-personal { background: #F2DAD4; color: #9A4F40; }
+    .toast { background: var(--green-dark); color: var(--cream-light); border-radius: 8px; font-size: 13px; width: auto; max-width: 240px; }
+        .toast .toast-body { padding: 8px 12px; }
+        .toast-danger { background: #A35A4F; }
+        .btn-danger { background: #A35A4F; border-color: #A35A4F; }
+        .btn-sm { font-size: 12px; padding: 3px 10px; }
+        .btn-danger:hover { background: #8A463C; border-color: #8A463C; }
     </style>
 </head>
 <body>
