@@ -42,7 +42,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'priority'    => 'required|in:low,medium,high',
-            'due_date'    => 'nullable|date|after_or_equal:today',
+            'due_date'    => 'required|date|after_or_equal:today',
         ]);
 
         Task::create([
@@ -96,7 +96,7 @@ class TaskController extends Controller
             'category_id' => 'required|exists:categories,id',
             'status'      => 'required|in:pending,done',
             'priority'    => 'required|in:low,medium,high',
-            'due_date'    => 'nullable|date',
+            'due_date'    => 'required|date',
         ]);
 
         $task->update($request->only('title', 'description', 'category_id', 'status', 'priority', 'due_date'));

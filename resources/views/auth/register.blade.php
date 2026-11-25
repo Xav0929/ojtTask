@@ -31,7 +31,10 @@
         .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(95, 122, 75, .2); }
         .btn-primary { background: var(--green-dark); border-color: var(--green-dark); border-radius: 9px; padding: 10px; font-weight: 500; }
         .btn-primary:hover { background: var(--green); border-color: var(--green); }
+        .position-relative ~ .invalid-feedback { display: block; }
         .hint { font-size: 12px; color: #6B7A5F; }
+        .position-relative .form-control.is-invalid { background-image: none; padding-right: 60px; }
+        .position-relative .form-control.is-invalid { background-image: none; padding-right: 60px; }
         .toggle-pass { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); background: none; border: 0; font-size: 13px; font-weight: 500; color: var(--green-dark); cursor: pointer; }
         a { color: var(--green-dark); font-weight: 500; }
         @media (max-width: 991px) { .hero-title { font-size: 44px; } .login-card { transform: none; } }

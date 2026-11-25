@@ -184,7 +184,10 @@
 
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea id="description" name="description" rows="3" class="form-control">{{ old('description') }}</textarea>
+                            <textarea id="description" name="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description') }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
@@ -202,7 +205,10 @@
 
                         <div class="mb-3">
                             <label for="due_date" class="form-label">Due date</label>
-                            <input type="date" id="due_date" name="due_date" class="form-control" min="{{ date('Y-m-d') }}">
+                            <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}" class="form-control @error('due_date') is-invalid @enderror" min="{{ date('Y-m-d') }}">
+                            @error('due_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
@@ -319,7 +325,12 @@
                             </div>
                             <div class="col-6">
                                 <label for="edit_due" class="form-label">Due date</label>
-                                <input type="date" id="edit_due" name="due_date" class="form-control" min="{{ date('Y-m-d') }}">
+                                <input type="date" id="edit_due" name="due_date" class="form-control @if (old('edit_id')) @error('due_date') is-invalid @enderror @endif" min="{{ date('Y-m-d') }}" required>
+                                @if (old('edit_id'))
+                                    @error('due_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
                             </div>
                         </div>
 
