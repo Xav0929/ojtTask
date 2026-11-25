@@ -76,7 +76,7 @@
                     <th>
                         <div class="d-flex align-items-center gap-3">
                             @if ($tasks->count())
-                                @php $allDone = $tasks->getCollection()->every(fn ($t) => $t->status === 'done'); @endphp
+                                @php $allDone = $tasks->getCollection()->every(fn ($t) => trim($t->status) === 'done'); @endphp
                                 <form action="{{ route('tasks.doneAll') }}" method="POST" title="Select all">
                                     @csrf
                                     @method('PATCH')
@@ -106,10 +106,10 @@
                                 <form action="{{ route('tasks.done', $task) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="checkbox" class="form-check-input mt-1" onchange="this.form.submit()" @checked($task->status === 'done')>
+                                    <input type="checkbox" class="form-check-input mt-1" onchange="this.form.submit()" @checked(trim($task->status) === 'done')>
                                 </form>
                                 <div>
-                                    <div class="fw-semibold task-link {{ $task->status === 'done' ? 'text-decoration-line-through' : '' }}"
+                                    <div class="fw-semibold task-link {{ trim($task->status) === 'done' ? 'text-decoration-line-through' : '' }}"
                                          data-bs-toggle="modal" data-bs-target="#detailsModal"
                                          data-title="{{ $task->title }}"
                                          data-description="{{ $task->description ?: 'No description' }}"

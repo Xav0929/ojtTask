@@ -33,7 +33,8 @@
 
         .tag { background: var(--cream); padding: 3px 10px; border-radius: 6px; font-size: 13px; }
         .tag-work     { background: #DCE8F2; color: #3E6A8A; }
-        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); border: 2px solid #8A9189; background-color: white;  }
+        .form-check-input { border: 2px solid #8A9189; background-color: white; }
+        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); }
         .tag-school   { background: #F6E7C8; color: #8A6420; }
         .tag-personal { background: #F2DAD4; color: #9A4F40; }
     .toast { background: var(--green-dark); color: var(--cream-light); border-radius: 8px; font-size: 13px; width: auto; max-width: 240px; }

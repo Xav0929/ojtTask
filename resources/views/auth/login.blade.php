@@ -47,7 +47,7 @@
             <!-- Hero -->
             <div class="col-lg-6" style="margin-top: -60px;">
                 <div class="eyebrow mb-3">A little more organized</div>
-                <h1 class="hero-title mb-4">Make room for what matters.</h1>
+                <h1 class="hero-title mb-4">Make Time for what matters.</h1>
                 <p class="hero-text">
                     A simple Task Manager for Home,school, work, and everything else on your list.
                     See what needs doing, keep your week clear, and move one task at a time.

@@ -13,7 +13,7 @@ class TaskController extends Controller
     $query = auth()->user()->tasks()->with('category');
 
     if ($request->search) {
-        $query->where('title', 'like', '%' . $request->search . '%');
+        $query->where('title', 'ilike', '%' . $request->search . '%');
     }
     if ($request->category) {
         $query->where('category_id', $request->category);
@@ -23,7 +23,7 @@ class TaskController extends Controller
     }
 
     $tasks      = $query->orderByRaw("status = 'done'")
-                        ->orderByRaw("FIELD(priority, 'high', 'medium', 'low')")
+                        ->orderByRaw("CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END")
                         ->orderBy('due_date')
                         ->paginate(6)
                         ->withQueryString();
