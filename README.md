@@ -1,11 +1,8 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Task Manager
+
+A task manager built with Laravel. Users can register, log in, and manage their own tasks. Each task belongs to a category (Work, School, Personal) and has a title, description, priority, status (pending/done), and due date.
 
 ## Frameworks and Template Used
 
@@ -13,6 +10,46 @@
 - **Template engine:** [Laravel Blade](https://laravel.com/docs/blade)
 - **Frontend framework/template:** [Bootstrap 5.3.3](https://getbootstrap.com/)
 - **Template source:** [Bootstrap 5.3.3 CDN](https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css)
+- **Database:** [PostgreSQL 17](https://www.postgresql.org/)
+- **Version control:** Git and GitHub
+- **Design:** Custom olive and cream layout based on a reference design (no external template link). Master layout: `resources/views/layouts/app.blade.php`
+## Features
+
+- Register, log in, and log out (passwords hashed)
+- `guest` and `auth` middleware protecting all task routes
+- Create, edit, delete, and view task details using Bootstrap modals
+- Search, filter by category and status, and pagination
+- Priority levels, overdue detection, and category color tags
+- Mark done checkbox and select all
+- Each user sees only their own tasks (403 on other users' tasks)
+
+
+## Project Structure
+
+- `routes/web.php`: routes and middleware groups
+- `app/Http/Controllers/TaskController.php`: task CRUD, filters, mark done
+- `app/Http/Controllers/AuthController.php`: login, register, logout
+- `app/Models/`: `User`, `Task`, `Category`
+- `database/migrations/`, `database/seeders/`, `database/factories/`
+- `resources/views/layouts/app.blade.php`: master layout
+- `resources/views/tasks/index.blade.php`: task list and modals
+- `resources/views/auth/`: login and register pages
+
+## Setup
+
+1. Clone the repository
+2. Install PHP packages: `composer install`
+3. Copy `.env.example` to `.env`
+4. Create a PostgreSQL database named `taskManager`
+5. In `.env`, set `DB_CONNECTION=pgsql`, `DB_PORT=5432`, `DB_DATABASE=taskManager`, `DB_USERNAME` and `DB_PASSWORD`
+6. Enable the `pdo_pgsql` and `pgsql` extensions in `php.ini`
+7. Generate the app key: `php artisan key:generate`
+8. Build and seed the database: `php artisan migrate:fresh --seed`
+9. Start the server: `php artisan serve`
+
+Then open http://127.0.0.1:8000
+
+**Demo account:** `test@example.com` / `password`
 
 ## About Laravel
 
