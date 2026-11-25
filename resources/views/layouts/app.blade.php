@@ -33,13 +33,7 @@
 
         .tag { background: var(--cream); padding: 3px 10px; border-radius: 6px; font-size: 13px; }
         .tag-work     { background: #DCE8F2; color: #3E6A8A; }
-        .tag-school   { background: #F6E7C8; color: #8A6420; }
-        .tag-personal { background: #F2DAD4; color: #9A4F40; }
-    .form-check-input { border: 2px solid #8A9189; background-color: white; }
-        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); }
-    .form-check-input { border: 2px solid #8A9189; background-color: white; }
-        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); }
-    .tag-work     { background: #DCE8F2; color: #3E6A8A; }
+        .form-check-input:checked { background-color: var(--green-dark); border-color: var(--green-dark); border: 2px solid #8A9189; background-color: white;  }
         .tag-school   { background: #F6E7C8; color: #8A6420; }
         .tag-personal { background: #F2DAD4; color: #9A4F40; }
     .toast { background: var(--green-dark); color: var(--cream-light); border-radius: 8px; font-size: 13px; width: auto; max-width: 240px; }
@@ -63,7 +57,14 @@
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center">
             <a href="{{ route('tasks.index') }}" class="fs-5 fw-bold text-decoration-none" style="color: var(--green-dark);">Task Manager</a>
-            
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="small">{{ auth()->user()->name }}</span>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-secondary">Log out</button>
+                </form>
+            </div>
         </div>
     </div>
 

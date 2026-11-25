@@ -22,6 +22,11 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+    public function tasks()
+    {
+        return $this->hasMany(\App\Models\Task::class);
+    }
+
     protected function casts(): array
     {
         return [

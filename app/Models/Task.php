@@ -10,7 +10,7 @@ class Task extends Model
     /** @use HasFactory<\Database\Factories\TaskFactory> */
     use HasFactory;
 
-    protected $fillable = ['category_id', 'title', 'description', 'status', 'priority', 'due_date'];
+    protected $fillable = ['user_id', 'category_id', 'title', 'description', 'status', 'priority', 'due_date'];
 
     public function isOverdue(): bool
     {
