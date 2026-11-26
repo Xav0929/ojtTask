@@ -23,7 +23,7 @@
         .eyebrow { font-size: 11px; letter-spacing: 1.2px; font-weight: 700; color: var(--green); text-transform: uppercase; }
         .hero-title { font-size: 64px; font-weight: 700; line-height: 1.05; letter-spacing: -2px; }
         .hero-text { color: #6B7A5F; max-width: 440px; }
-        .login-card { background: var(--cream-light); border: 1px solid #DDDBC6; border-radius: 16px; padding: 32px; transform: rotate(1deg); box-shadow: 0 12px 30px rgba(67, 83, 58, .12); }
+        .login-card { background: var(--cream-light); border: 1px solid #DDDBC6; border-radius: 16px; padding: 32px;  box-shadow: 0 12px 30px rgba(67, 83, 58, .12); }
         .form-control { background: white; border: 1px solid #DDDBC6; border-radius: 9px; padding: 10px 12px; }
         .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(95, 122, 75, .2); }
         .btn-primary { background: var(--green-dark); border-color: var(--green-dark); border-radius: 9px; padding: 10px; font-weight: 500; }

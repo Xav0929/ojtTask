@@ -4,6 +4,18 @@
 
 @section('content')
 
+    <style>
+        .pagination .page-link { color: var(--green-dark); background: var(--cream-light); border-color: #DDDBC6; }
+        .pagination .page-item.active .page-link { background: var(--green-dark); border-color: var(--green-dark); color: #fff; }
+        .pagination .page-item.disabled .page-link { opacity: .5; }
+    </style>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="appToast" class="toast border-0" role="alert" data-bs-delay="1500">
+            <div class="toast-body" id="appToastBody"></div>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <h1 class="mb-1">My tasks</h1>
@@ -14,79 +26,30 @@
         </button>
     </div>
 
-    @if (session('success'))
-        <div class="toast-container position-fixed top-0 end-0 p-3">
-            <div id="successToast" class="toast align-items-center border-0 {{ session('type') === 'danger' ? 'toast-danger' : '' }}" role="alert" data-bs-delay="1500">
-                <div class="toast-body">{{ session('success') }}</div>
-            </div>
-        </div>
-        <script>
-            window.addEventListener('load', function () {
-                new bootstrap.Toast(document.getElementById('successToast')).show();
-            });
-        </script>
-    @endif
-
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card-box p-3">
-                <small>All tasks</small>
-                <div class="fs-3 fw-bold">{{ $total }}</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card-box p-3">
-                <small>In progress</small>
-                <div class="fs-3 fw-bold">{{ $pending }}</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card-box p-3">
-                <small>Completed</small>
-                <div class="fs-3 fw-bold">{{ $done }}</div>
-            </div>
-        </div>
+        <div class="col-md-4"><div class="card-box p-3"><small>All tasks</small><div class="fs-3 fw-bold" id="statTotal">-</div></div></div>
+        <div class="col-md-4"><div class="card-box p-3"><small>In progress</small><div class="fs-3 fw-bold" id="statPending">-</div></div></div>
+        <div class="col-md-4"><div class="card-box p-3"><small>Completed</small><div class="fs-3 fw-bold" id="statDone">-</div></div></div>
     </div>
 
-    <form action="{{ route('tasks.index') }}" method="GET" class="d-flex gap-2 mb-3">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search tasks...">
-
-        <select name="category" class="form-select w-auto">
-            <option value="">All categories</option>
-            @foreach ($categories as $category)
-                <option value="{{ $category->id }}" @selected(request('category') == $category->id)>{{ $category->name }}</option>
-            @endforeach
-        </select>
-
-        <select name="status" class="form-select w-auto">
+    <form id="filterForm" class="d-flex gap-2 mb-3">
+        <input type="text" id="fSearch" class="form-control" placeholder="Search tasks...">
+        <select id="fCategory" class="form-select w-auto"><option value="">All categories</option></select>
+        <select id="fStatus" class="form-select w-auto">
             <option value="">Any status</option>
-            <option value="pending" @selected(request('status') == 'pending')>Pending</option>
-            <option value="done" @selected(request('status') == 'done')>Done</option>
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
         </select>
-
         <button type="submit" class="btn btn-primary">Filter</button>
     </form>
 
-
-    <!-- Task table -->
     <div class="card-box overflow-hidden">
         <table class="table">
             <thead>
                 <tr>
                     <th>
                         <div class="d-flex align-items-center gap-3">
-                            @if ($tasks->count())
-                                @php $allDone = $tasks->getCollection()->every(fn ($t) => trim($t->status) === 'done'); @endphp
-                                <form action="{{ route('tasks.doneAll') }}" method="POST" title="Select all">
-                                    @csrf
-                                    @method('PATCH')
-                                    @foreach ($tasks as $t)
-                                        <input type="hidden" name="ids[]" value="{{ $t->id }}">
-                                    @endforeach
-                                    <input type="hidden" name="status" value="{{ $allDone ? 'pending' : 'done' }}">
-                                    <input type="checkbox" class="form-check-input" onchange="this.form.submit()" @checked($allDone)>
-                                </form>
-                            @endif
+                            <input type="checkbox" class="form-check-input" id="checkAll" title="Select all">
                             Task
                         </div>
                     </th>
@@ -95,132 +58,55 @@
                     <th>Status</th>
                     <th>Due date</th>
                     <th class="text-end">Actions</th>
-                    
                 </tr>
             </thead>
-            <tbody>
-                @forelse ($tasks as $task)
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-start gap-3">
-                                <form action="{{ route('tasks.done', $task) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="checkbox" class="form-check-input mt-1" onchange="this.form.submit()" @checked(trim($task->status) === 'done')>
-                                </form>
-                                <div>
-                                    <div class="fw-semibold task-link {{ trim($task->status) === 'done' ? 'text-decoration-line-through' : '' }}"
-                                         data-bs-toggle="modal" data-bs-target="#detailsModal"
-                                         data-title="{{ $task->title }}"
-                                         data-description="{{ $task->description ?: 'No description' }}"
-                                         data-category="{{ $task->category->name }}"
-                                         data-priority="{{ ucfirst($task->priority) }}"
-                                         data-status="{{ ucfirst($task->status) }}"
-                                         data-due="{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : 'No due date' }}{{ $task->isOverdue() ? ' (Overdue)' : '' }}"
-                                         data-created="{{ $task->created_at->format('M d, Y') }}">{{ $task->title }}</div>
-                            <small>{{ $task->description }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td><span class="tag tag-{{ strtolower($task->category->name) }}">{{ $task->category->name }}</span></td>
-                        <td><span class="prio prio-{{ $task->priority }}">{{ ucfirst($task->priority) }}</span></td>
-                        <td>{{ ucfirst($task->status) }}</td>
-                        <td class="{{ $task->isOverdue() ? 'text-overdue' : '' }}">
-                            {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : '-' }}
-                            @if ($task->isOverdue())
-                                <span class="badge-overdue">Overdue</span>
-                            @endif
-                        </td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-secondary"
-                                    data-bs-toggle="modal" data-bs-target="#editTaskModal"
-                                    data-id="{{ $task->id }}"
-                                    data-title="{{ $task->title }}"
-                                    data-description="{{ $task->description }}"
-                                    data-category="{{ $task->category_id }}"
-                                    data-status="{{ $task->status }}"
-                                    data-priority="{{ $task->priority }}"
-                                    data-due="{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : '' }}">Edit</button>
-                            <button type="button" class="btn btn-sm btn-danger"
-                                    data-bs-toggle="modal" data-bs-target="#deleteTaskModal"
-                                    data-id="{{ $task->id }}"
-                                    data-title="{{ $task->title }}">Delete</button>
-                        </td>
-
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-4">No tasks found.</td>
-                    </tr>
-                @endforelse
+            <tbody id="taskBody">
+                <tr><td colspan="6" class="text-center py-4">Loading tasks...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $tasks->links() }}
-    </div>
+    <nav class="mt-3"><ul class="pagination justify-content-end" id="pager"></ul></nav>
 
+    {{-- Create modal --}}
     <div class="modal fade" id="createTaskModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{ route('tasks.store') }}" method="POST">
-                    @csrf
-
+                <form id="createForm" novalidate>
                     <div class="modal-header">
                         <h5 class="modal-title">New task</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" id="title" name="title" value="{{ old('title') }}"
-                                   class="form-control @error('title') is-invalid @enderror">
-                            @error('title')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Title</label>
+                            <input type="text" name="title" class="form-control">
+                            <div class="invalid-feedback" data-error="title"></div>
                         </div>
-
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea id="description" name="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Description</label>
+                            <textarea name="description" rows="3" class="form-control"></textarea>
+                            <div class="invalid-feedback" data-error="description"></div>
                         </div>
-
                         <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <select id="category" name="category_id" class="form-select @error('category_id') is-invalid @enderror">
-                                <option value="">Select...</option>
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('category_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Category</label>
+                            <select name="category_id" class="form-select category-select"><option value="">Select...</option></select>
+                            <div class="invalid-feedback" data-error="category_id"></div>
                         </div>
-
                         <div class="mb-3">
-                            <label for="due_date" class="form-label">Due date</label>
-                            <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}" class="form-control @error('due_date') is-invalid @enderror" min="{{ date('Y-m-d') }}">
-                            @error('due_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Due date</label>
+                            <input type="date" name="due_date" class="form-control">
+                            <div class="invalid-feedback" data-error="due_date"></div>
                         </div>
-
                         <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <select id="priority" name="priority" class="form-select">
+                            <label class="form-label">Priority</label>
+                            <select name="priority" class="form-select">
                                 <option value="low">Low</option>
                                 <option value="medium" selected>Medium</option>
                                 <option value="high">High</option>
                             </select>
                         </div>
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Task</button>
@@ -230,33 +116,70 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        <script>
-            window.addEventListener('load', function () {
-                @if (old('edit_id'))
-                    editForm.action = "{{ url('tasks') }}/{{ old('edit_id') }}";
-                    document.getElementById('edit_id').value          = @json(old('edit_id'));
-                    document.getElementById('edit_title').value       = @json(old('title'));
-                    document.getElementById('edit_description').value = @json(old('description'));
-                    document.getElementById('edit_category').value    = @json(old('category_id'));
-                    document.getElementById('edit_status').value      = @json(old('status'));
-                    document.getElementById('edit_priority').value    = @json(old('priority'));
-                    document.getElementById('edit_due').value         = @json(old('due_date'));
-                    new bootstrap.Modal(editModal).show();
-                @else
-                    new bootstrap.Modal(document.getElementById('createTaskModal')).show();
-                @endif
-            });
-        </script>
-    @endif
+    {{-- Edit modal --}}
+    <div class="modal fade" id="editTaskModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="editForm" novalidate>
+                    <input type="hidden" name="id">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" name="title" class="form-control">
+                            <div class="invalid-feedback" data-error="title"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" rows="3" class="form-control"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category_id" class="form-select category-select"></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="pending">Pending</option>
+                                    <option value="done">Done</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Due date</label>
+                                <input type="date" name="due_date" class="form-control">
+                                <div class="invalid-feedback" data-error="due_date"></div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <label class="form-label">Priority</label>
+                                <select name="priority" class="form-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
+    {{-- Delete modal --}}
     <div class="modal fade" id="deleteTaskModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-
+                <form id="deleteForm">
+                    <input type="hidden" name="id">
                     <div class="modal-body text-center p-4">
                         <h5 class="mb-2">Delete task?</h5>
                         <p class="mb-4">"<span id="deleteTitle"></span>" will be removed permanently.</p>
@@ -268,129 +191,22 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('deleteTaskModal').addEventListener('show.bs.modal', function (e) {
-            const b = e.relatedTarget;
-            document.getElementById('deleteForm').action = "{{ url('tasks') }}/" + b.dataset.id;
-            document.getElementById('deleteTitle').textContent = b.dataset.title;
-        });
-    </script>
-
-    <div class="modal fade" id="editTaskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="editForm" method="POST" action="">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="edit_id" id="edit_id">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit task</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="edit_title" class="form-label">Title</label>
-                            <input type="text" id="edit_title" name="title"
-                                   class="form-control @if (old('edit_id')) @error('title') is-invalid @enderror @endif">
-                            @if (old('edit_id'))
-                                @error('title')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            @endif
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_description" class="form-label">Description</label>
-                            <textarea id="edit_description" name="description" rows="3" class="form-control"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="edit_category" class="form-label">Category</label>
-                            <select id="edit_category" name="category_id" class="form-select">
-                                @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-6">
-                                <label for="edit_status" class="form-label">Status</label>
-                                <select id="edit_status" name="status" class="form-select">
-                                    <option value="pending">Pending</option>
-                                    <option value="done">Done</option>
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label for="edit_due" class="form-label">Due date</label>
-                                <input type="date" id="edit_due" name="due_date" class="form-control @if (old('edit_id')) @error('due_date') is-invalid @enderror @endif" min="{{ date('Y-m-d') }}" required>
-                                @if (old('edit_id'))
-                                    @error('due_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <label for="edit_priority" class="form-label">Priority</label>
-                                <select id="edit_priority" name="priority" class="form-select">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const editModal = document.getElementById('editTaskModal');
-        const editForm  = document.getElementById('editForm');
-
-        // Fill the form from the clicked row's data
-        editModal.addEventListener('show.bs.modal', function (e) {
-            const b = e.relatedTarget;
-            if (!b) return;
-            editForm.action = "{{ url('tasks') }}/" + b.dataset.id;
-            document.getElementById('edit_id').value          = b.dataset.id;
-            document.getElementById('edit_title').value       = b.dataset.title;
-            document.getElementById('edit_description').value = b.dataset.description;
-            document.getElementById('edit_category').value    = b.dataset.category;
-            document.getElementById('edit_status').value      = b.dataset.status;
-            document.getElementById('edit_priority').value    = b.dataset.priority;
-            document.getElementById('edit_due').value         = b.dataset.due;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('edit_due').min = (b.dataset.due && b.dataset.due < today) ? b.dataset.due : today;
-        });
-    </script>
-
-<div class="modal fade" id="detailsModal" tabindex="-1">
+    {{-- Details modal --}}
+    <div class="modal fade" id="detailsModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="detailsTitle"></h5>
+                    <h5 class="modal-title" id="dTitle"></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="detailsDescription" class="mb-4"></p>
+                    <p id="dDescription" class="mb-4"></p>
                     <div class="row g-3">
-                        <div class="col-6"><small class="d-block">Category</small><span id="detailsCategory"></span></div>
-                        <div class="col-6"><small class="d-block">Priority</small><span id="detailsPriority"></span></div>
-                        <div class="col-6"><small class="d-block">Status</small><span id="detailsStatus"></span></div>
-                        <div class="col-6"><small class="d-block">Due date</small><span id="detailsDue"></span></div>
-                        <div class="col-6"><small class="d-block">Created</small><span id="detailsCreated"></span></div>
+                        <div class="col-6"><small class="d-block">Category</small><span id="dCategory"></span></div>
+                        <div class="col-6"><small class="d-block">Priority</small><span id="dPriority"></span></div>
+                        <div class="col-6"><small class="d-block">Status</small><span id="dStatus"></span></div>
+                        <div class="col-6"><small class="d-block">Due date</small><span id="dDue"></span></div>
+                        <div class="col-6"><small class="d-block">Created</small><span id="dCreated"></span></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -400,17 +216,275 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('detailsModal').addEventListener('show.bs.modal', function (e) {
-            const b = e.relatedTarget;
-            document.getElementById('detailsTitle').textContent       = b.dataset.title;
-            document.getElementById('detailsDescription').textContent = b.dataset.description;
-            document.getElementById('detailsCategory').textContent    = b.dataset.category;
-            document.getElementById('detailsPriority').textContent    = b.dataset.priority;
-            document.getElementById('detailsStatus').textContent      = b.dataset.status;
-            document.getElementById('detailsDue').textContent         = b.dataset.due;
-            document.getElementById('detailsCreated').textContent     = b.dataset.created;
-        });
-    </script>
-
 @endsection
+
+@push('scripts')
+<script>
+    // ---------- Axios setup ----------
+    const api = axios.create({
+        baseURL: '/api',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    });
+
+    // Session expired: send the user back to login
+    api.interceptors.response.use(r => r, err => {
+        if (err.response && err.response.status === 401) window.location.href = '/login';
+        return Promise.reject(err);
+    });
+
+    // ---------- State and helpers ----------
+    let page = 1;
+    let tasksById = {};
+    const $ = id => document.getElementById(id);
+    const today = new Date().toISOString().split('T')[0];
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+    const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '-';
+
+    function toast(message, danger = false) {
+        const el = $('appToast');
+        el.classList.toggle('toast-danger', danger);
+        $('appToastBody').textContent = message;
+        bootstrap.Toast.getOrCreateInstance(el).show();
+    }
+
+    function hideModal(id) {
+        bootstrap.Modal.getInstance($(id))?.hide();
+    }
+
+    function clearErrors(form) {
+        form.querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+    }
+
+    function showErrors(form, errors) {
+        clearErrors(form);
+        Object.keys(errors).forEach(field => {
+            const box = form.querySelector(`[data-error="${field}"]`);
+            if (box) {
+                box.textContent = errors[field][0];
+                box.previousElementSibling.classList.add('is-invalid');
+            }
+        });
+    }
+
+    function handleError(err, form) {
+        if (err.response && err.response.status === 422 && form) {
+            showErrors(form, err.response.data.errors);
+        } else if (err.response && err.response.status === 403) {
+            toast('You are not allowed to do that.', true);
+        } else {
+            toast('Something went wrong. Please try again.', true);
+        }
+    }
+
+    // ---------- Load categories ----------
+    async function loadCategories() {
+        try {
+            const res = await api.get('/categories');
+            const options = res.data.data.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+            $('fCategory').insertAdjacentHTML('beforeend', options);
+            document.querySelectorAll('.category-select').forEach(s => s.insertAdjacentHTML('beforeend', options));
+        } catch (e) {
+            toast('Could not load categories.', true);
+        }
+    }
+
+    // ---------- Load and render tasks ----------
+    async function loadTasks() {
+        $('taskBody').innerHTML = '<tr><td colspan="6" class="text-center py-4">Loading tasks...</td></tr>';
+        try {
+            const res = await api.get('/tasks', {
+                params: {
+                    page,
+                    search: $('fSearch').value,
+                    category: $('fCategory').value,
+                    status: $('fStatus').value
+                }
+            });
+            const tasks = res.data.data;
+            const meta = res.data.meta;
+
+            // If we deleted the last item on a page, go back one page
+            if (tasks.length === 0 && page > 1) { page--; return loadTasks(); }
+
+            tasksById = {};
+            tasks.forEach(t => tasksById[t.id] = t);
+
+            renderStats(res.data.stats);
+            renderRows(tasks);
+            renderPager(meta);
+        } catch (e) {
+            $('taskBody').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Could not load tasks. Please refresh the page.</td></tr>';
+        }
+    }
+
+    function renderStats(s) {
+        $('statTotal').textContent = s.total;
+        $('statPending').textContent = s.pending;
+        $('statDone').textContent = s.done;
+    }
+
+    function renderRows(tasks) {
+        $('checkAll').checked = tasks.length > 0 && tasks.every(t => t.status === 'done');
+        $('checkAll').disabled = tasks.length === 0;
+
+        if (tasks.length === 0) {
+            $('taskBody').innerHTML = '<tr><td colspan="6" class="text-center py-4">No tasks found.</td></tr>';
+            return;
+        }
+
+        $('taskBody').innerHTML = tasks.map(t => `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-start gap-3">
+                        <input type="checkbox" class="form-check-input mt-1 row-check" data-id="${t.id}" ${t.status === 'done' ? 'checked' : ''}>
+                        <div>
+                            <div class="fw-semibold task-link ${t.status === 'done' ? 'text-decoration-line-through' : ''}"
+                                 data-bs-toggle="modal" data-bs-target="#detailsModal" data-id="${t.id}">${esc(t.title)}</div>
+                            <small>${esc(t.description)}</small>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="tag tag-${esc(t.category.name.toLowerCase())}">${esc(t.category.name)}</span></td>
+                <td><span class="prio prio-${t.priority}">${cap(t.priority)}</span></td>
+                <td>${cap(t.status)}</td>
+                <td class="${t.is_overdue ? 'text-overdue' : ''}">
+                    ${fmt(t.due_date)}
+                    ${t.is_overdue ? '<span class="badge-overdue">Overdue</span>' : ''}
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editTaskModal" data-id="${t.id}">Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal" data-id="${t.id}">Delete</button>
+                </td>
+            </tr>`).join('');
+    }
+
+    function renderPager(meta) {
+        if (meta.last_page <= 1) { $('pager').innerHTML = ''; return; }
+        let html = `<li class="page-item ${meta.current_page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${meta.current_page - 1}">&laquo;</a></li>`;
+        for (let i = 1; i <= meta.last_page; i++) {
+            html += `<li class="page-item ${i === meta.current_page ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+        }
+        html += `<li class="page-item ${meta.current_page === meta.last_page ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${meta.current_page + 1}">&raquo;</a></li>`;
+        $('pager').innerHTML = html;
+    }
+
+    // ---------- Filters, pagination, checkboxes ----------
+    $('filterForm').addEventListener('submit', e => { e.preventDefault(); page = 1; loadTasks(); });
+
+    $('pager').addEventListener('click', e => {
+        e.preventDefault();
+        const link = e.target.closest('[data-page]');
+        if (!link || link.parentElement.classList.contains('disabled')) return;
+        page = Number(link.dataset.page);
+        loadTasks();
+    });
+
+    $('taskBody').addEventListener('change', async e => {
+        if (!e.target.classList.contains('row-check')) return;
+        try {
+            await api.patch(`/tasks/${e.target.dataset.id}/done`);
+            toast('Task updated!');
+            loadTasks();
+        } catch (err) { handleError(err); loadTasks(); }
+    });
+
+    $('checkAll').addEventListener('change', async e => {
+        const ids = Object.keys(tasksById);
+        if (ids.length === 0) return;
+        try {
+            await api.patch('/tasks/done-all', { ids, status: e.target.checked ? 'done' : 'pending' });
+            toast('Tasks updated!');
+            loadTasks();
+        } catch (err) { handleError(err); loadTasks(); }
+    });
+
+    // ---------- Create ----------
+    $('createTaskModal').addEventListener('show.bs.modal', () => {
+        const f = $('createForm');
+        f.reset();
+        clearErrors(f);
+        f.due_date.min = today;
+    });
+
+    $('createForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const f = e.target;
+        try {
+            await api.post('/tasks', Object.fromEntries(new FormData(f)));
+            hideModal('createTaskModal');
+            toast('Task created!');
+            page = 1;
+            loadTasks();
+        } catch (err) { handleError(err, f); }
+    });
+
+    // ---------- Edit ----------
+    $('editTaskModal').addEventListener('show.bs.modal', e => {
+        const t = tasksById[e.relatedTarget?.dataset.id];
+        if (!t) return;
+        const f = $('editForm');
+        clearErrors(f);
+        f.id.value = t.id;
+        f.title.value = t.title;
+        f.description.value = t.description ?? '';
+        f.category_id.value = t.category_id;
+        f.status.value = t.status;
+        f.priority.value = t.priority;
+        f.due_date.value = t.due_date ?? '';
+        // Overdue tasks may keep their old date; others must pick today or later
+        f.due_date.min = (t.due_date && t.due_date < today) ? t.due_date : today;
+    });
+
+    $('editForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const f = e.target;
+        const data = Object.fromEntries(new FormData(f));
+        try {
+            await api.put(`/tasks/${data.id}`, data);
+            hideModal('editTaskModal');
+            toast('Task updated!');
+            loadTasks();
+        } catch (err) { handleError(err, f); }
+    });
+
+    // ---------- Delete ----------
+    $('deleteTaskModal').addEventListener('show.bs.modal', e => {
+        const t = tasksById[e.relatedTarget?.dataset.id];
+        if (!t) return;
+        $('deleteForm').id.value = t.id;
+        $('deleteTitle').textContent = t.title;
+    });
+
+    $('deleteForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        try {
+            await api.delete(`/tasks/${e.target.id.value}`);
+            hideModal('deleteTaskModal');
+            toast('Task deleted!', true);
+            loadTasks();
+        } catch (err) { handleError(err); }
+    });
+
+    // ---------- Details ----------
+    $('detailsModal').addEventListener('show.bs.modal', e => {
+        const t = tasksById[e.relatedTarget?.dataset.id];
+        if (!t) return;
+        $('dTitle').textContent = t.title;
+        $('dDescription').textContent = t.description || 'No description';
+        $('dCategory').textContent = t.category.name;
+        $('dPriority').textContent = cap(t.priority);
+        $('dStatus').textContent = cap(t.status);
+        $('dDue').textContent = t.due_date ? fmt(t.due_date) + (t.is_overdue ? ' (Overdue)' : '') : 'No due date';
+        $('dCreated').textContent = fmt(t.created_at);
+    });
+
+    // ---------- Start ----------
+    loadCategories().then(loadTasks);
+</script>
+@endpush
