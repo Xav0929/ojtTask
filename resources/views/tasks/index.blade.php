@@ -4,32 +4,20 @@
 
 @section('content')
 
-    <style>
-        .pagination .page-link { color: var(--green-dark); background: var(--cream-light); border-color: #DDDBC6; }
-        .pagination .page-item.active .page-link { background: var(--green-dark); border-color: var(--green-dark); color: #fff; }
-        .pagination .page-item.disabled .page-link { opacity: .5; }
-    </style>
-
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div id="appToast" class="toast border-0" role="alert" data-bs-delay="1500">
-            <div class="toast-body" id="appToastBody"></div>
-        </div>
-    </div>
+    <x-toast />
 
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <h1 class="mb-1">My tasks</h1>
             <div>A clear list for a calmer week.</div>
         </div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">
-            + New task
-        </button>
+        <x-button data-bs-toggle="modal" data-bs-target="#createTaskModal">+ New task</x-button>
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="card-box p-3"><small>All tasks</small><div class="fs-3 fw-bold" id="statTotal">-</div></div></div>
-        <div class="col-md-4"><div class="card-box p-3"><small>In progress</small><div class="fs-3 fw-bold" id="statPending">-</div></div></div>
-        <div class="col-md-4"><div class="card-box p-3"><small>Completed</small><div class="fs-3 fw-bold" id="statDone">-</div></div></div>
+        <x-stat-card label="All tasks" id="statTotal" />
+        <x-stat-card label="In progress" id="statPending" />
+        <x-stat-card label="Completed" id="statDone" />
     </div>
 
     <form id="filterForm" class="d-flex gap-2 mb-3">
@@ -40,184 +28,98 @@
             <option value="pending">Pending</option>
             <option value="done">Done</option>
         </select>
-        <button type="submit" class="btn btn-primary">Filter</button>
+        <x-button type="submit">Filter</x-button>
     </form>
 
-    <div class="card-box overflow-hidden">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="checkbox" class="form-check-input" id="checkAll" title="Select all">
-                            Task
-                        </div>
-                    </th>
-                    <th>Category</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Due date</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="taskBody">
-                <tr><td colspan="6" class="text-center py-4">Loading tasks...</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <x-table body-id="taskBody">
+        <x-slot:head>
+            <th>
+                <div class="d-flex align-items-center gap-3">
+                    <input type="checkbox" class="form-check-input" id="checkAll" title="Select all">
+                    Task
+                </div>
+            </th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Due date</th>
+            <th class="text-end">Actions</th>
+        </x-slot:head>
+        <tr><td colspan="6" class="text-center py-4">Loading tasks...</td></tr>
+    </x-table>
 
     <nav class="mt-3"><ul class="pagination justify-content-end" id="pager"></ul></nav>
 
-    {{-- Create modal --}}
-    <div class="modal fade" id="createTaskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="createForm" novalidate>
-                    <div class="modal-header">
-                        <h5 class="modal-title">New task</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Title</label>
-                            <input type="text" name="title" class="form-control">
-                            <div class="invalid-feedback" data-error="title"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" rows="3" class="form-control"></textarea>
-                            <div class="invalid-feedback" data-error="description"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select name="category_id" class="form-select category-select"><option value="">Select...</option></select>
-                            <div class="invalid-feedback" data-error="category_id"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Due date</label>
-                            <input type="date" name="due_date" class="form-control">
-                            <div class="invalid-feedback" data-error="due_date"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Priority</label>
-                            <select name="priority" class="form-select">
-                                <option value="low">Low</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Task</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <x-modal id="createTaskModal" title="New task" form="createForm">
+        <x-input label="Title" name="title" />
+        <x-input label="Description" name="description" type="textarea" />
+        <x-select label="Category" name="category_id" class="category-select">
+            <option value="">Select...</option>
+        </x-select>
+        <x-input label="Due date" name="due_date" type="date" />
+        <x-select label="Priority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+        </x-select>
+        <x-slot:footer>
+            <x-button variant="secondary" data-bs-dismiss="modal">Cancel</x-button>
+            <x-button type="submit">Save Task</x-button>
+        </x-slot:footer>
+    </x-modal>
 
-    {{-- Edit modal --}}
-    <div class="modal fade" id="editTaskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="editForm" novalidate>
-                    <input type="hidden" name="id">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit task</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Title</label>
-                            <input type="text" name="title" class="form-control">
-                            <div class="invalid-feedback" data-error="title"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" rows="3" class="form-control"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select name="category_id" class="form-select category-select"></select>
-                        </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
-                                    <option value="pending">Pending</option>
-                                    <option value="done">Done</option>
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Due date</label>
-                                <input type="date" name="due_date" class="form-control">
-                                <div class="invalid-feedback" data-error="due_date"></div>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <label class="form-label">Priority</label>
-                                <select name="priority" class="form-select">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
+    <x-modal id="editTaskModal" title="Edit task" form="editForm">
+        <input type="hidden" name="id">
+        <x-input label="Title" name="title" />
+        <x-input label="Description" name="description" type="textarea" />
+        <x-select label="Category" name="category_id" class="category-select"></x-select>
+        <div class="row">
+            <div class="col-6">
+                <x-select label="Status" name="status">
+                    <option value="pending">Pending</option>
+                    <option value="done">Done</option>
+                </x-select>
+            </div>
+            <div class="col-6"><x-input label="Due date" name="due_date" type="date" /></div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <x-select label="Priority" name="priority">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </x-select>
             </div>
         </div>
-    </div>
+        <x-slot:footer>
+            <x-button variant="secondary" data-bs-dismiss="modal">Cancel</x-button>
+            <x-button type="submit">Save changes</x-button>
+        </x-slot:footer>
+    </x-modal>
 
-    {{-- Delete modal --}}
-    <div class="modal fade" id="deleteTaskModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-                <form id="deleteForm">
-                    <input type="hidden" name="id">
-                    <div class="modal-body text-center p-4">
-                        <h5 class="mb-2">Delete task?</h5>
-                        <p class="mb-4">"<span id="deleteTitle"></span>" will be removed permanently.</p>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <x-modal id="deleteTaskModal" form="deleteForm" size="modal-sm" body-class="text-center p-4">
+        <input type="hidden" name="id">
+        <h5 class="mb-2">Delete task?</h5>
+        <p class="mb-4">"<span id="deleteTitle"></span>" will be removed permanently.</p>
+        <x-button variant="secondary" data-bs-dismiss="modal">Cancel</x-button>
+        <x-button variant="danger" type="submit">Delete</x-button>
+    </x-modal>
 
-    {{-- Details modal --}}
-    <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="dTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="dDescription" class="mb-4"></p>
-                    <div class="row g-3">
-                        <div class="col-6"><small class="d-block">Category</small><span id="dCategory"></span></div>
-                        <div class="col-6"><small class="d-block">Priority</small><span id="dPriority"></span></div>
-                        <div class="col-6"><small class="d-block">Status</small><span id="dStatus"></span></div>
-                        <div class="col-6"><small class="d-block">Due date</small><span id="dDue"></span></div>
-                        <div class="col-6"><small class="d-block">Created</small><span id="dCreated"></span></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+    <x-modal id="detailsModal" title="Task details" title-id="dTitle">
+        <p id="dDescription" class="mb-4"></p>
+        <div class="row g-3">
+            <div class="col-6"><small class="d-block">Category</small><span id="dCategory"></span></div>
+            <div class="col-6"><small class="d-block">Priority</small><span id="dPriority"></span></div>
+            <div class="col-6"><small class="d-block">Status</small><span id="dStatus"></span></div>
+            <div class="col-6"><small class="d-block">Due date</small><span id="dDue"></span></div>
+            <div class="col-6"><small class="d-block">Created</small><span id="dCreated"></span></div>
         </div>
-    </div>
+        <x-slot:footer>
+            <x-button variant="secondary" data-bs-dismiss="modal">Close</x-button>
+        </x-slot:footer>
+    </x-modal>
 
 @endsection
-
 @push('scripts')
 <script>
     // ---------- Axios setup ----------

@@ -11,6 +11,7 @@ A task manager built with Laravel. Users can register, log in, and manage their 
 - **Frontend framework/template:** [Bootstrap 5.3.3](https://getbootstrap.com/)
 - **Template source:** [Bootstrap 5.3.3 CDN](https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css)
 - **Database:** [PostgreSQL 17](https://www.postgresql.org/)
+- **API calls:** [Axios](https://axios-http.com/) (loaded from a CDN)
 - **Version control:** Git and GitHub
 - **Design:** Custom olive and cream layout based on a reference design (no external template link). Master layout: `resources/views/layouts/app.blade.php`
 ## Features
@@ -22,17 +23,27 @@ A task manager built with Laravel. Users can register, log in, and manage their 
 - Priority levels, overdue detection, and category color tags
 - Mark done checkbox and select all
 - Each user sees only their own tasks (403 on other users' tasks)
+- JSON API for tasks and categories using Laravel API Resources (status codes 201, 401, 403, 422)
+- The tasks page loads and saves all data through the API with Axios, with no page reloads
+- Loading, empty, and error states, with validation messages from the API
+- Reusable Blade components: `x-button`, `x-input`, `x-select`, `x-modal`, `x-table`, `x-toast`, `x-stat-card`
+- Seeders and factories for users, categories, and tasks
 
 
 ## Project Structure
 
 - `routes/web.php`: routes and middleware groups
-- `app/Http/Controllers/TaskController.php`: task CRUD, filters, mark done
+- `app/Http/Controllers/TaskController.php`: returns the tasks page
+- `app/Http/Controllers/Api/`: API controllers for tasks and categories (CRUD, filters, mark done)
+- `app/Http/Resources/`: JSON resources for tasks and categories
+- `routes/api.php`: API routes
 - `app/Http/Controllers/AuthController.php`: login, register, logout
 - `app/Models/`: `User`, `Task`, `Category`
 - `database/migrations/`, `database/seeders/`, `database/factories/`
 - `resources/views/layouts/app.blade.php`: master layout
-- `resources/views/tasks/index.blade.php`: task list and modals
+- `resources/views/tasks/index.blade.php`: task list page (data loaded from the API with Axios)
+- `resources/views/components/`: reusable Blade components
+- `public/css/app.css`: site styles
 - `resources/views/auth/`: login and register pages
 
 ## Setup
